@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'coin_data.dart';
+import 'package:flutter/cupertino.dart';
+import 'dart:io' show Platform;
 
 class PriceScreen extends StatefulWidget {
   @override
@@ -8,9 +10,8 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrency = 'USD';
-  
 
-  List<DropdownMenuItem> getDropDownMenuItems() {
+  DropdownButton<String> androidDropdownButton() {
     List<DropdownMenuItem<String>> dropDownItem = [];
     for (String currency in currenciesList) {
       var newItem = DropdownMenuItem(
@@ -19,7 +20,33 @@ class _PriceScreenState extends State<PriceScreen> {
       );
       dropDownItem.add(newItem);
     }
-    return dropDownItem;
+
+    return DropdownButton<String>(
+        value: selectedCurrency,
+        items: dropDownItem,
+        onChanged: (value) {
+          setState(() {
+            selectedCurrency = value;
+          });
+        });
+  }
+
+  CupertinoPicker IOSPicker() {
+    List<Text> dropDownItem = [];
+    for (String currency in currenciesList)
+      dropDownItem.add(Text(
+        currency,
+        style: TextStyle(color: Colors.white),
+      ));
+
+    return CupertinoPicker(
+      backgroundColor: Colors.lightBlue,
+      itemExtent: 32.0,
+      onSelectedItemChanged: (SelectedIndex) {
+        print(SelectedIndex);
+      },
+      children: dropDownItem,
+    );
   }
 
   @override
@@ -54,18 +81,12 @@ class _PriceScreenState extends State<PriceScreen> {
             ),
           ),
           Container(
-              height: 150.0,
-              alignment: Alignment.center,
-              padding: EdgeInsets.only(bottom: 30.0),
-              color: Colors.lightBlue,
-              child: DropdownButton<String>(
-                  value: selectedCurrency,
-                  items: getDropDownMenuItems(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedCurrency = value;
-                    });
-                  })),
+            height: 150.0,
+            alignment: Alignment.center,
+            padding: EdgeInsets.only(bottom: 30.0),
+            color: Colors.lightBlue,
+            child: Platform.isAndroid ? androidDropdownButton() : IOSPicker(),
+          ),
         ],
       ),
     );
