@@ -26,7 +26,7 @@ class _PriceScreenState extends State<PriceScreen> {
       onChanged: (value) {
         setState(() {
           selectedCurrency = value;
-           // Call getData() when the picker/dropdown changes.
+          // Call getData() when the picker/dropdown changes.
           getData();
         });
       },
@@ -45,25 +45,28 @@ class _PriceScreenState extends State<PriceScreen> {
       onSelectedItemChanged: (selectedIndex) {
         selectedCurrency = currenciesList[selectedIndex];
         //Call getData() when the picker/dropdown changes.
-          getData();
+        getData();
       },
       children: pickerItems,
     );
   }
 
-  String bitcoinValue = '?';
+  List<String> bitcoinValue=['?','?','?'];
 
   void getData() async {
     try {
-      double data = await CoinData(selectedCurrency).getCoinData();
-      // We can't await in a setState(). So you have to separate it out into two steps.
-      setState(() {
-        bitcoinValue = data.toStringAsFixed(0);
-      });
+      for (var i = 0; i < cryptoList.length; i++) {
+        double data = await CoinData(selectedCurrency, cryptoList[i]).getCoinData();
+        // We can't await in a setState(). So you have to separate it out into two steps.
+        setState(() {
+          bitcoinValue[i] = data.toStringAsFixed(0);
+        });
+      }
     } catch (e) {
       print(e);
     }
   }
+
   @override
   void initState() {
     super.initState();
@@ -81,28 +84,19 @@ class _PriceScreenState extends State<PriceScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 5.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  //TODO: Update the Text Widget with the live bitcoin data here.
-                  '1 BTC = $bitcoinValue $selectedCurrency',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
+          BuildPadding(
+            bitcoinValue: bitcoinValue[0],
+            selectedCurrency: selectedCurrency,
+            virtualCoin: cryptoList[0],
           ),
+          BuildPadding(
+              bitcoinValue: bitcoinValue[1],
+              selectedCurrency: selectedCurrency,
+              virtualCoin: cryptoList[1]),
+          BuildPadding(
+              bitcoinValue: bitcoinValue[2],
+              selectedCurrency: selectedCurrency,
+              virtualCoin: cryptoList[2]),
           Container(
             height: 150.0,
             alignment: Alignment.center,
@@ -111,6 +105,45 @@ class _PriceScreenState extends State<PriceScreen> {
             child: Platform.isIOS ? iOSPicker() : androidDropdown(),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class BuildPadding extends StatelessWidget {
+  const BuildPadding({
+    Key key,
+    @required this.bitcoinValue,
+    @required this.selectedCurrency,
+    @required this.virtualCoin,
+  }) : super(key: key);
+
+  final String virtualCoin;
+  final String bitcoinValue;
+  final String selectedCurrency;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
+      child: Card(
+        color: Colors.lightBlueAccent,
+        elevation: 5.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
+          child: Text(
+            //TODO: Update the Text Widget with the live bitcoin data here.
+            '1 $virtualCoin = $bitcoinValue $selectedCurrency',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 20.0,
+              color: Colors.white,
+            ),
+          ),
+        ),
       ),
     );
   }
