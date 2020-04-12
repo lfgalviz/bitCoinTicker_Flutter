@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'coin_data.dart';
 import 'package:flutter/cupertino.dart';
+import 'coin_data.dart';
 import 'dart:io' show Platform;
 
 class PriceScreen extends StatefulWidget {
@@ -10,43 +10,65 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrency = 'USD';
-
-  DropdownButton<String> androidDropdownButton() {
-    List<DropdownMenuItem<String>> dropDownItem = [];
+  DropdownButton<String> androidDropdown() {
+    List<DropdownMenuItem<String>> dropdownItems = [];
     for (String currency in currenciesList) {
       var newItem = DropdownMenuItem(
         child: Text(currency),
         value: currency,
       );
-      dropDownItem.add(newItem);
+      dropdownItems.add(newItem);
     }
 
     return DropdownButton<String>(
-        value: selectedCurrency,
-        items: dropDownItem,
-        onChanged: (value) {
-          setState(() {
-            selectedCurrency = value;
-          });
+      value: selectedCurrency,
+      items: dropdownItems,
+      onChanged: (value) {
+        setState(() {
+          selectedCurrency = value;
+           // Call getData() when the picker/dropdown changes.
+          getData();
         });
+      },
+    );
   }
 
-  CupertinoPicker IOSPicker() {
-    List<Text> dropDownItem = [];
-    for (String currency in currenciesList)
-      dropDownItem.add(Text(
-        currency,
-        style: TextStyle(color: Colors.white),
-      ));
+  CupertinoPicker iOSPicker() {
+    List<Text> pickerItems = [];
+    for (String currency in currenciesList) {
+      pickerItems.add(Text(currency));
+    }
 
     return CupertinoPicker(
       backgroundColor: Colors.lightBlue,
       itemExtent: 32.0,
-      onSelectedItemChanged: (SelectedIndex) {
-        print(SelectedIndex);
+      onSelectedItemChanged: (selectedIndex) {
+        selectedCurrency = currenciesList[selectedIndex];
+        //Call getData() when the picker/dropdown changes.
+          getData();
       },
-      children: dropDownItem,
+      children: pickerItems,
     );
+  }
+
+  String bitcoinValue = '?';
+
+  void getData() async {
+    try {
+      double data = await CoinData(selectedCurrency).getCoinData();
+      // We can't await in a setState(). So you have to separate it out into two steps.
+      setState(() {
+        bitcoinValue = data.toStringAsFixed(0);
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+  @override
+  void initState() {
+    super.initState();
+    //TODO: Call getData() when the screen loads up.
+    getData();
   }
 
   @override
@@ -70,7 +92,8 @@ class _PriceScreenState extends State<PriceScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
                 child: Text(
-                  '1 BTC = ? USD',
+                  //TODO: Update the Text Widget with the live bitcoin data here.
+                  '1 BTC = $bitcoinValue $selectedCurrency',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.0,
@@ -85,7 +108,7 @@ class _PriceScreenState extends State<PriceScreen> {
             alignment: Alignment.center,
             padding: EdgeInsets.only(bottom: 30.0),
             color: Colors.lightBlue,
-            child: Platform.isAndroid ? androidDropdownButton() : IOSPicker(),
+            child: Platform.isIOS ? iOSPicker() : androidDropdown(),
           ),
         ],
       ),
